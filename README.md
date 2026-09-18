@@ -6,6 +6,7 @@ Instead of starting from a list of possible threats, A-SDF starts from what you'
 Describe a system, or upload an existing diagram or spec, and it returns a structured threat model — assets identified, anti-patterns flagged, and threats laid out with a risk score.
 
 **Scope**
+
 Application Design Review — Ai-assisted security review of an application
 
 Architecture Design Review — model multi-system flows (APIs, middleware, third parties)
