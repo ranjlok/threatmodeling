@@ -7,7 +7,9 @@ Describe a system, or upload an existing diagram or spec, and it returns a struc
 
 **Scope**
 Application Design Review — Ai-assisted security review of an application
+
 Architecture Design Review — model multi-system flows (APIs, middleware, third parties)
+
 Cloud Design Review — Review cloud architectures, corresponding resources, identity, network security, data protection and logging.
 
 **Who it's for**
