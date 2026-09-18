@@ -14,6 +14,6 @@ Cloud Design Review — Review cloud architectures, corresponding resources, ide
 Security reviewers and individual practitioners who want a fast, solid first draft of a threat model — not a replacement for expert review, but a structured starting point.
 
 Try it - Start for free
-👉 Register at threatmodeling.in
+👉 [Register at threatmodeling.in](https://threatmodeling.in/register)
 ---
 This page is hosted here via GitHub Pages: `index.html` in this repo.
