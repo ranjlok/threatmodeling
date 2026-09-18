@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>A-SDF Threat Modeling</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0B0F1A;
+    --panel:#121826;
+    --border:#26314A;
+    --grid:#161E30;
+    --text:#E4E9F2;
+    --text-dim:#8B96AC;
+    --accent:#FF6B35;
+    --accent-dim:#C44F24;
+  }
+  :root:not([data-theme="light"]){ }
+  @media (prefers-color-scheme: light){
+    :root:not([data-theme="dark"]){
+      --bg:#F5F3EE;
+      --panel:#FFFFFF;
+      --border:#D9D4C8;
+      --grid:#ECE8DE;
+      --text:#161B26;
+      --text-dim:#5B6474;
+      --accent:#D9491F;
+      --accent-dim:#B33C18;
+    }
+  }
+  :root[data-theme="light"]{
+    --bg:#F5F3EE; --panel:#FFFFFF; --border:#D9D4C8; --grid:#ECE8DE;
+    --text:#161B26; --text-dim:#5B6474; --accent:#D9491F; --accent-dim:#B33C18;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      linear-gradient(var(--grid) 1px, transparent 1px) 0 0/40px 40px,
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px) 0 0/40px 40px,
+      var(--bg);
+    color:var(--text);
+    font-family:'Inter',system-ui,sans-serif;
+    line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:920px;margin:0 auto;padding:0 24px;}
+  .tag{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12.5px;
+    color:var(--accent);
+    letter-spacing:.02em;
+  }
+  header.hero{padding:88px 0 64px;}
+  h1{
+    font-family:'Space Grotesk',sans-serif;
+    font-weight:700;
+    font-size:clamp(34px,5.6vw,56px);
+    line-height:1.08;
+    margin:14px 0 20px;
+    max-width:15ch;
+  }
+  .lede{
+    font-size:18px;
+    color:var(--text-dim);
+    max-width:56ch;
+    margin:0 0 34px;
+  }
+  .cta-row{display:flex;gap:14px;flex-wrap:wrap;align-items:center;}
+  .btn{
+    display:inline-flex;align-items:center;gap:8px;
+    font-family:'Space Grotesk',sans-serif;
+    font-weight:600;font-size:15.5px;
+    padding:13px 22px;border-radius:3px;
+    text-decoration:none;border:1px solid transparent;
+    transition:transform .15s ease, background .15s ease;
+  }
+  .btn:hover{transform:translateY(-1px);}
+  .btn-primary{background:var(--accent);color:#0B0F1A;}
+  .btn-primary:hover{background:var(--accent-dim);}
+  .btn-ghost{color:var(--text);border-color:var(--border);}
+  .btn-ghost:hover{border-color:var(--accent);}
+ 
+  .diagram{margin-top:56px;}
+  .diagram svg{width:100%;height:auto;display:block;}
+ 
+  section{padding:52px 0;border-top:1px solid var(--border);}
+  h2{
+    font-family:'Space Grotesk',sans-serif;
+    font-weight:600;font-size:26px;margin:0 0 10px;
+  }
+  .section-lede{color:var(--text-dim);max-width:58ch;margin:0 0 32px;font-size:15.5px;}
+ 
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;}
+  @media(max-width:760px){.grid3{grid-template-columns:1fr;}}
+  .card{
+    background:var(--panel);
+    border:1px solid var(--border);
+    padding:22px 20px;
+    border-radius:3px;
+  }
+  .card .k{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--accent);display:block;margin-bottom:10px;}
+  .card h3{font-family:'Space Grotesk',sans-serif;font-size:17px;margin:0 0 8px;font-weight:600;}
+  .card p{margin:0;color:var(--text-dim);font-size:14.5px;}
+  .card.dev{border-style:dashed;}
+ 
+  .flow{display:flex;flex-direction:column;gap:0;margin-top:6px;}
+  .flow-row{display:flex;gap:18px;padding:18px 0;border-bottom:1px solid var(--border);}
+  .flow-row:last-child{border-bottom:none;}
+  .flow-num{font-family:'IBM Plex Mono',monospace;color:var(--accent);font-size:13px;min-width:26px;padding-top:2px;}
+  .flow-body h3{font-family:'Space Grotesk',sans-serif;font-size:16.5px;margin:0 0 4px;font-weight:600;}
+  .flow-body p{margin:0;color:var(--text-dim);font-size:14.5px;max-width:60ch;}
+ 
+  .who p{color:var(--text-dim);max-width:62ch;font-size:15.5px;}
+  .who strong{color:var(--text);font-weight:600;}
+ 
+  footer{padding:60px 0 80px;text-align:left;}
+  footer .panel{
+    background:var(--panel);border:1px solid var(--border);
+    padding:36px 30px;border-radius:3px;
+    display:flex;justify-content:space-between;align-items:center;gap:24px;flex-wrap:wrap;
+  }
+  footer h2{margin-bottom:6px;}
+  footer p{color:var(--text-dim);margin:0;font-size:14.5px;}
+  .foot-note{margin-top:22px;color:var(--text-dim);font-size:13px;}
+  .foot-note a{color:var(--text-dim);}
+  a{color:inherit;}
+</style>
+</head>
+<body>
+<div class="wrap">
+ 
+  <header class="hero">
+    <span class="tag">asset-driven secure design framework</span>
+    <h1>Map the assets. Model the threats.</h1>
+    <p class="lede">An AI-assisted threat modeling tool built on A-SDF — a framework that starts from what you're protecting, not from a list of attacks. Describe a system or drop in what you already have, and get a structured threat model back in minutes.</p>
+    <div class="cta-row">
+      <a class="btn btn-primary" href="https://threatmodeling.in/register">Register to use it</a>
+      <a class="btn btn-ghost" href="https://threatmodeling.in">Visit threatmodeling.in</a>
+    </div>
+ 
+    <div class="diagram">
+      <svg viewBox="0 0 860 150" xmlns="http://www.w3.org/2000/svg">
+        <g stroke="var(--border)" stroke-width="1.5">
+          <line x1="90" y1="40" x2="270" y2="75"/>
+          <line x1="90" y1="120" x2="270" y2="75"/>
+          <line x1="270" y1="75" x2="450" y2="30"/>
+          <line x1="270" y1="75" x2="450" y2="110"/>
+          <line x1="450" y1="30" x2="630" y2="75"/>
+          <line x1="450" y1="110" x2="630" y2="75"/>
+          <line x1="630" y1="75" x2="790" y2="45"/>
+          <line x1="630" y1="75" x2="790" y2="105"/>
+        </g>
+        <g fill="var(--accent)">
+          <circle cx="90" cy="40" r="4"/>
+          <circle cx="90" cy="120" r="4"/>
+          <circle cx="450" cy="30" r="4"/>
+          <circle cx="790" cy="45" r="4"/>
+        </g>
+        <g fill="var(--text-dim)">
+          <circle cx="270" cy="75" r="4"/>
+          <circle cx="450" cy="110" r="4"/>
+          <circle cx="630" cy="75" r="4"/>
+          <circle cx="790" cy="105" r="4"/>
+        </g>
+        <g font-family="IBM Plex Mono, monospace" font-size="11" fill="var(--text-dim)">
+          <text x="65" y="22">asset</text>
+          <text x="245" y="97">trust boundary</text>
+          <text x="605" y="97">flow</text>
+          <text x="765" y="27">exposure</text>
+        </g>
+      </svg>
+    </div>
+  </header>
+ 
+  <section id="purpose">
+    <h2>Purpose</h2>
+    <p class="section-lede">Manual threat modeling is thorough but slow — often days of workshops for a single system. A-SDF's tool takes the same asset-first discipline and runs it through AI: it identifies what's being protected, checks the design against known anti-patterns, and produces a threat model with categorized threats and a qualitative risk score, all traceable back to specific assets.</p>
+  </section>
+ 
+  <section id="scope">
+    <h2>Scope</h2>
+    <p class="section-lede">Three modeling domains, covering how systems are actually built today.</p>
+    <div class="grid3">
+      <div class="card">
+        <span class="k">application</span>
+        <h3>Application design</h3>
+        <p>Threat model a service or feature from its architecture and data flows.</p>
+      </div>
+      <div class="card">
+        <span class="k">integration</span>
+        <h3>Integration design</h3>
+        <p>Model multi-system flows — APIs, middleware, third-party connections.</p>
+      </div>
+      <div class="card dev">
+        <span class="k">cloud · in development</span>
+        <h3>Cloud architecture</h3>
+        <p>Cloud-native and multi-tier deployments, validated against real breach patterns.</p>
+      </div>
+    </div>
+  </section>
+ 
+  <section id="how">
+    <h2>How it works</h2>
+    <div class="flow">
+      <div class="flow-row">
+        <div class="flow-num">01</div>
+        <div class="flow-body">
+          <h3>Describe or upload</h3>
+          <p>Paste a system description, or bring existing artefacts — architecture diagrams, API specs.</p>
+        </div>
+      </div>
+      <div class="flow-row">
+        <div class="flow-num">02</div>
+        <div class="flow-body">
+          <h3>Assets and anti-patterns</h3>
+          <p>The engine extracts and classifies assets, then checks the design against known anti-patterns.</p>
+        </div>
+      </div>
+      <div class="flow-row">
+        <div class="flow-num">03</div>
+        <div class="flow-body">
+          <h3>Structured threat model</h3>
+          <p>Get an asset inventory and a threat table — categorized, risk-scored, linked to the anti-patterns found.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+ 
+  <section class="who" id="who">
+    <h2>Who it's for</h2>
+    <p><strong>Security reviewers and individual practitioners</strong> — not a heavyweight enterprise platform. It's built for someone who needs a solid first draft of a threat model fast, then applies their own judgment on top. Best used as a structured starting point and gap-identifier, alongside expert review rather than in place of it.</p>
+  </section>
+ 
+  <footer>
+    <div class="panel">
+      <div>
+        <h2>Try it on your next design</h2>
+        <p>Free to register — bring a system description or an existing diagram.</p>
+      </div>
+      <a class="btn btn-primary" href="https://threatmodeling.in/register">Register at threatmodeling.in</a>
+    </div>
+    <p class="foot-note">threatmodeling.in — an independent tool, not affiliated with any vendor.</p>
+  </footer>
+ 
+</div>
+</body>
+</html>
+ 
